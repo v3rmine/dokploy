@@ -1,4 +1,4 @@
-FROM node:18-slim AS base
+FROM node:18-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -7,7 +7,7 @@ FROM base AS build
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 
-RUN apt-get update && apt-get install -y python3 make g++ git && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python3 make g++ git bash
 
 # Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
@@ -27,7 +27,7 @@ WORKDIR /app
 # Set production
 ENV NODE_ENV=production
 
-RUN apt-get update && apt-get install -y curl apache2-utils && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl apache2-utils bash tar
 
 # Copy only the necessary files
 COPY --from=build /prod/dokploy/.next ./.next
@@ -42,7 +42,7 @@ COPY --from=build /prod/dokploy/node_modules ./node_modules
 
 
 # Install docker
-RUN curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && rm get-docker.sh
+RUN apk add --no-cache docker-cli
 
 # Install Nixpacks and tsx
 # | VERBOSE=1 VERSION=1.21.0 bash
@@ -52,7 +52,7 @@ RUN curl -sSL https://nixpacks.com/install.sh -o install.sh \
     && pnpm install -g tsx
 
 # Install buildpacks
-COPY --from=buildpacksio/pack:0.35.0 /usr/local/bin/pack /usr/local/bin/pack
+COPY --from=buildpacksio/pack:0.35.0-base /usr/local/bin/pack /usr/local/bin/pack
 
 EXPOSE 3000
 CMD [ "pnpm", "start" ]
