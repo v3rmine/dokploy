@@ -12,6 +12,12 @@ const __dirname = path.dirname(__filename);
 /** @type {import("next").NextConfig} */
 const nextConfig = {
 	reactStrictMode: true,
+	output: "standalone",
+	experimental: {
+		outputFileTracingIncludes: {
+			"/": ["./server/**/*"],
+		},
+	},
 	eslint: {
 		ignoreDuringBuilds: true,
 	},
