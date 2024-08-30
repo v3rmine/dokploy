@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 
+import fs from "node:fs";
 import dotenv, { type DotenvParseOutput } from "dotenv";
 
 const result = dotenv.config({ path: ".env.production" });
@@ -33,8 +34,13 @@ try {
 			tsconfig: "tsconfig.server.json",
 			define,
 			packages: "external",
+			metafile: true,
 		})
-		.catch(() => {
+		.then((result) => {
+			if (result.metafile) {
+				fs.writeFileSync('./dist/metafile.json', JSON.stringify(result.metafile));
+			}
+		}, () => {
 			return process.exit(1);
 		});
 } catch (error) {
